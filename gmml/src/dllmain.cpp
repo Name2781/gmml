@@ -346,8 +346,7 @@ bool startClrHost() {
         // good idea to use mono_jit_init_version and specify a mono version to prevent problems from that? nah
     MonoAssembly *assembly;
 
-    assembly = mono_domain_assembly_open (domain, "file.exe"); // i have no idea what the path should be uhhhhh
-    // TODO: Change the above to be the right path ^^^^^^^^
+    assembly = mono_domain_assembly_open (domain, "gmml\\patcher\\GmmlPatcher.dll"); // i have no idea what the path should be uhhhhh
     if (!assembly) {
         MessageBoxA(NULL, "Error loading assembly");
         return false;
