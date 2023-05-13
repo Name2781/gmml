@@ -8,6 +8,9 @@
 #include "../include/sigscan.h"
 
 #include "../lib/minhook/include/MinHook.h"
+// TODO: Actually add these headers somewhere, probably in ../lib, but for now, they don't exist :3
+#include <mono/jit/jit.h>
+#include <mono/metadata/assembly.h> 
 
 #include <fstream>
 
@@ -338,15 +341,52 @@ unsigned char* (CORECLR_DELEGATE_CALLTYPE* modifyDataManaged)(int, unsigned char
 void (CORECLR_DELEGATE_CALLTYPE* InitGMLFunctionsManaged)();
 // ReSharper restore CppInconsistentNaming
 bool startClrHost() {
+    // pain
+    MonoDomain *domain = mono_jit_init ("gmml"); //maybe works idfk lol
+        // good idea to use mono_jit_init_version and specify a mono version to prevent problems from that? nah
+    MonoAssembly *assembly;
+
+    assembly = mono_domain_assembly_open (domain, "file.exe"); // i have no idea what the path should be uhhhhh
+    // TODO: Change the above to be the right path ^^^^^^^^
+    if (!assembly) {
+        MessageBoxA(NULL, "Error loading assembly");
+        return false;
+    }
+
+    // now we just load the functions!
+
+    // how do we load functions? idk lol :3
+    // we get the monomethod
+    MonoImage* image = mono_assembly_get_image(assembly); // no idea
+    MonoMethodDesc*  modifyDataDesc = mono_method_desc_new("ModifyData", true); // sure
+    MonoMethodDesc*  initGmlFunctionsDesc = mono_method_desc_new("InitGmlFunctions", true); // sure
+
+    MonoMethod* modifyDataMethod = mono_method_desc_search_in_image (modifyDataDesc, image);
+    MonoMethod* initGmlFunctionsMethod = mono_method_desc_search_in_image (initGmlFunctionsDesc, image);
+    // todo: test all this shit lol
+
+    // now we get the trunk whatever from it
+    // looks good enough
+    // but how do i make these into the modifyDataManaged/InitGMLFunctionsManaged functions
+    void* modifyDataFunc = mono_method_get_unmanaged_thunk(modifyDataMethod);
+    void* initGmlFunctionsFunc = mono_method_get_unmanaged_thunk(initGmlFunctionsMethod);
+
+    // chatgpt here...
+    ModifyDataManagedFunc modifyDataManagedFunc = (ModifyDataManagedFunc) modifyDataFunc;
+    InitGMLFunctionsManagedFunc initGMLFunctionsManagedFunc = (InitGMLFunctionsManagedFunc) initGmlFunctionsFunc;
+    // does it work? idk lol :3
+
+    return true;
+    /* dead code, here until the above is no longer dysfunctional.
     if(!load_hostfxr()) {
         MessageBoxA(NULL, "Error when loading hostfxr", NULL, MB_OK);
         return false;
     }
 
-    const string_t configPath = TEXT("gmml\\patcher\\GmmlPatcher.runtimeconfig.json");
+    const string_t configPath = TEXT("gmml\\patcher\\GmmlPatcher.runtimeconfig.json"); // appears to use that to get the config path whatever that does
     // shut up dumbass
     // ReSharper disable once CppLocalVariableMayBeConst
-    load_assembly_and_get_function_pointer_fn loadAssemblyAndGetFunction = get_dotnet_load_assembly(
+    load_assembly_and_get_function_pointer_fn loadAssemblyAndGetFunction = get_dotnet_load_assembly( // where function
         configPath.c_str());
     if(loadAssemblyAndGetFunction == nullptr) {
         MessageBoxA(NULL, "Error when starting .NET CLR", NULL, MB_OK);
@@ -383,6 +423,7 @@ bool startClrHost() {
         MessageBoxA(NULL, "CLR host loaded", "Info", MB_OK);
 
     return true;
+    */
 }
 
 unsigned char* modifyData(int audioGroup, unsigned char* orig, int* size) {
