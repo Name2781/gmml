@@ -337,8 +337,8 @@ namespace {
 // ReSharper restore All
 
 // ReSharper disable CppInconsistentNaming
-unsigned char* (CORECLR_DELEGATE_CALLTYPE* modifyDataManaged)(int, unsigned char*, int*);
-void (CORECLR_DELEGATE_CALLTYPE* InitGMLFunctionsManaged)();
+unsigned char* (*modifyDataManaged)(int, unsigned char*, int*, MonoException** exc);
+void (*InitGMLFunctionsManaged)(MonoException** exc);
 // ReSharper restore CppInconsistentNaming
 bool startClrHost() {
     // pain
@@ -357,8 +357,8 @@ bool startClrHost() {
     // how do we load functions? idk lol :3
     // we get the monomethod
     MonoImage* image = mono_assembly_get_image(assembly); // no idea
-    MonoMethodDesc*  modifyDataDesc = mono_method_desc_new("ModifyData", true); // sure
-    MonoMethodDesc*  initGmlFunctionsDesc = mono_method_desc_new("InitGmlFunctions", true); // sure
+    MonoMethodDesc*  modifyDataDesc = mono_method_desc_new("GmmlPatcher.Patcher:ModifyData", true); // sure
+    MonoMethodDesc*  initGmlFunctionsDesc = mono_method_desc_new("GmmlPatcher.Interop:InitGmlFunctions", true); // sure
 
     MonoMethod* modifyDataMethod = mono_method_desc_search_in_image (modifyDataDesc, image);
     MonoMethod* initGmlFunctionsMethod = mono_method_desc_search_in_image (initGmlFunctionsDesc, image);
@@ -376,6 +376,8 @@ bool startClrHost() {
     // does it work? idk lol :3
 
     return true;
+
+
     /* dead code, here until the above is no longer dysfunctional.
     if(!load_hostfxr()) {
         MessageBoxA(NULL, "Error when loading hostfxr", NULL, MB_OK);
